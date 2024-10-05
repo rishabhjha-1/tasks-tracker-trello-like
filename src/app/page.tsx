@@ -1,101 +1,222 @@
-import Image from "next/image";
+'use client';
+import React, { useRef, useState, useEffect } from 'react';
+import { DndProvider, useDrag, useDrop, DropTargetMonitor } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import axios from 'axios';
 
-export default function Home() {
+interface Developer {
+  _id: string;
+  name: string;
+}
+
+interface Task {
+  _id: string;
+  title: string;
+  status: 'tasks' | 'inprogress' | 'testing' | 'done';
+  developer: Developer | null;
+}
+
+interface Column {
+  id: string;
+  title: string;
+  tasks: Task[];
+}
+
+interface DragItem {
+  id: string;
+  index: number;
+  status: string;
+  type: string;
+}
+
+const TaskCard: React.FC<{ 
+  task: Task; 
+  index: number; 
+  status: string;
+  moveTask: (fromStatus: string, toStatus: string, dragIndex: number, hoverIndex: number) => void 
+}> = ({ task, index, status, moveTask }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [{ isDragging }, drag] = useDrag<DragItem, unknown, { isDragging: boolean }>({
+    type: 'TASK',
+    item: { id: task._id, index, status, type: 'TASK' },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  const [, drop] = useDrop<DragItem, unknown, unknown>({
+    accept: 'TASK',
+    hover(item: DragItem, monitor: DropTargetMonitor) {
+      if (!ref.current) {
+        return;
+      }
+      const dragIndex = item.index;
+      const hoverIndex = index;
+      
+      if (dragIndex === hoverIndex && item.status === status) {
+        return;
+      }
+
+      const hoverBoundingRect = ref.current?.getBoundingClientRect();
+      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      const clientOffset = monitor.getClientOffset();
+      const hoverClientY = clientOffset!.y - hoverBoundingRect.top;
+
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+        return;
+      }
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+        return;
+      }
+
+      moveTask(item.status, status, dragIndex, hoverIndex);
+      item.index = hoverIndex;
+      item.status = status;
+    },
+  });
+
+  drag(drop(ref));
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+    <div 
+      ref={ref} 
+      style={{ 
+        opacity: isDragging ? 0.5 : 1,
+        padding: '8px',
+        margin: '8px 0',
+        backgroundColor: '#456C86',
+        color: 'white',
+        borderRadius: '4px',
+        cursor: 'move'
+      }}
+    >
+      <div>{task.title}</div>
+      <div style={{ fontSize: '0.8em', marginTop: '4px' }}>
+        {task.developer ? task.developer.name : 'Unassigned'}
+      </div>
     </div>
   );
-}
+};
+
+const Column: React.FC<{ 
+  column: Column; 
+  moveTask: (fromStatus: string, toStatus: string, dragIndex: number, hoverIndex: number) => void 
+}> = ({ column, moveTask }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [, drop] = useDrop<DragItem, unknown, unknown>({
+    accept: 'TASK',
+    drop(item: DragItem) {
+      const dragIndex = item.index;
+      const hoverIndex = column.tasks.length;
+      if (item.status !== column.id) {
+        moveTask(item.status, column.id, dragIndex, hoverIndex);
+        item.index = hoverIndex;
+        item.status = column.id;
+      }
+    },
+  });
+
+  drop(ref);
+
+  return (
+    <div 
+      ref={ref} 
+      style={{ 
+        minWidth: '250px',
+        backgroundColor: '#f4f5f7',
+        borderRadius: '4px',
+        padding: '8px',
+        marginRight: '16px'
+      }}
+    >
+      <h3 style={{ marginBottom: '8px' }}>{column.title}</h3>
+      {column.tasks.map((task, index) => (
+        <TaskCard 
+          key={task._id} 
+          task={task} 
+          index={index}
+          status={column.id}
+          moveTask={moveTask} 
+        />
+      ))}
+    </div>
+  );
+};
+
+const Board: React.FC = () => {
+  const [columns, setColumns] = useState<Column[]>([
+    { id: 'tasks', title: 'To Do', tasks: [] },
+    { id: 'inprogress', title: 'In Progress', tasks: [] },
+    { id: 'testing', title: 'Testing', tasks: [] },
+    { id: 'done', title: 'Done', tasks: [] },
+  ]);
+  const [developers, setDevelopers] = useState<Developer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+          const [tasksRes, devsRes] = await Promise.all([
+            axios.get<Task[]>('/api/tasks'),
+            axios.get<Developer[]>('/api/developer')
+          ]);
+
+          setDevelopers(devsRes.data);
+
+          const newColumns = columns.map(column => ({
+            ...column,
+            tasks: tasksRes.data.filter(task => task.status === column.id)
+          }));
+
+          setColumns(newColumns);
+
+       
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const moveTask = async (fromStatus: string, toStatus: string, dragIndex: number, hoverIndex: number) => {
+    const newColumns = JSON.parse(JSON.stringify(columns));
+    const fromColumn = newColumns.find((col: Column) => col.id === fromStatus);
+    const toColumn = newColumns.find((col: Column) => col.id === toStatus);
+    const [removedTask] = fromColumn.tasks.splice(dragIndex, 1);
+    
+    removedTask.status = toStatus;
+    toColumn.tasks.splice(hoverIndex, 0, removedTask);
+
+    setColumns(newColumns);
+
+    // Update local storage
+    localStorage.setItem('boardColumns', JSON.stringify(newColumns));
+
+    try {
+      await axios.patch(`/api/tasks/${removedTask._id}`, { status: toStatus });
+    } catch (error) {
+      console.error('Error updating task:', error);
+      // Optionally, revert the state if the API call fails
+    }
+  };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
+        {columns.map(column => (
+          <Column key={column.id} column={column} moveTask={moveTask} />
+        ))}
+      </div>
+    </DndProvider>
+  );
+};
+
+export default Board;
