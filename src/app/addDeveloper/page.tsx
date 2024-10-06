@@ -6,7 +6,7 @@ const AddDeveloper = () => {
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
   const router = useRouter(); // useRouter for navigation
-
+  //@ts-ignore
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
