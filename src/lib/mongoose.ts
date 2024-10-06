@@ -1,5 +1,5 @@
 import mongoose, { Connection } from 'mongoose';
-const MONGODB_URI = "mongodb+srv://Rishabh:Letzkhelo%401@cluster0.thpy6wf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/task-tracker";
+
 
 
 
@@ -14,12 +14,12 @@ export async function connectMongo() {
 
   try {
     
-    if (!MONGODB_URI) {
+    if (!process.env.MONGODB_URI) {
       throw new Error('Please add the MongoDB URI to your environment variables');
     }
 
     // No need for options
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI);
     isConnected = true;
     console.log('Connected to MongoDB');
   } catch (error) {

@@ -3,6 +3,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { DndProvider, useDrag, useDrop, DropTargetMonitor } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';  // Import useRouter from Next.js
 
 interface Developer {
   _id: string;
@@ -150,8 +151,10 @@ const Board: React.FC = () => {
     { id: 'testing', title: 'Testing', tasks: [] },
     { id: 'done', title: 'Done', tasks: [] },
   ]);
-  const [developers, setDevelopers] = useState<Developer[]>([]);
+  const [, setDevelopers] = useState<Developer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const router = useRouter(); // Initialize useRouter
 
   useEffect(() => {
     const fetchData = async () => {
@@ -171,7 +174,6 @@ const Board: React.FC = () => {
 
           setColumns(newColumns);
 
-       
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -193,8 +195,6 @@ const Board: React.FC = () => {
 
     setColumns(newColumns);
 
-    // Update local storage
-    localStorage.setItem('boardColumns', JSON.stringify(newColumns));
 
     try {
       await axios.patch(`/api/tasks/${removedTask._id}`, { status: toStatus });
@@ -210,10 +210,27 @@ const Board: React.FC = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
-        {columns.map(column => (
-          <Column key={column.id} column={column} moveTask={moveTask} />
-        ))}
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h1>Task Tracker</h1>
+        <div style={{ marginBottom: '20px' }}>
+          <button 
+            onClick={() => router.push('/createTasks')} 
+            style={{ marginRight: '10px', padding: '10px 15px', cursor: 'pointer', borderRadius: '4px', backgroundColor: '#5CB85C', color: 'white' }}
+          >
+            Create Task
+          </button>
+          <button 
+            onClick={() => router.push('/addDeveloper')} 
+            style={{ padding: '10px 15px', cursor: 'pointer', borderRadius: '4px', backgroundColor: '#0275D8', color: 'white' }}
+          >
+            Add Developer
+          </button>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
+          {columns.map(column => (
+            <Column key={column.id} column={column} moveTask={moveTask} />
+          ))}
+        </div>
       </div>
     </DndProvider>
   );
