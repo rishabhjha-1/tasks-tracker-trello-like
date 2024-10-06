@@ -3,9 +3,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const AddDeveloper = () => {
-  const [name, setName] = useState('');
-  const [message, setMessage] = useState('');
-  const router = useRouter(); // useRouter for navigation
+  const [name, setName] = useState<string>(''); // Specify type as string
+  const [message, setMessage] = useState<string>(''); // Specify type as string
+  const router = useRouter();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -69,7 +70,7 @@ const AddDeveloper = () => {
 const styles = {
   container: {
     display: 'flex',
-    flexDirection: 'column' as 'column',
+    flexDirection: 'column', // No need for 'as' assertion
     alignItems: 'center',
     padding: '20px',
   },
@@ -94,7 +95,7 @@ const styles = {
   },
   form: {
     display: 'flex',
-    flexDirection: 'column' as 'column',
+    flexDirection: 'column', // No need for 'as' assertion
     alignItems: 'center',
   },
   input: {
