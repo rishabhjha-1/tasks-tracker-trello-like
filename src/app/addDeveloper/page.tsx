@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CSSProperties } from 'react'; // Importing CSSProperties
 
 const AddDeveloper = () => {
   const [name, setName] = useState<string>(''); // Specify type as string
@@ -66,11 +67,11 @@ const AddDeveloper = () => {
   );
 };
 
-// Basic styling for the component
-const styles = {
+// Basic styling for the component with the correct CSSProperties type
+const styles: { [key: string]: CSSProperties } = {
   container: {
     display: 'flex',
-    flexDirection: 'column', // No need for 'as' assertion
+    flexDirection: 'column', // Properly typed as 'column'
     alignItems: 'center',
     padding: '20px',
   },
@@ -95,7 +96,7 @@ const styles = {
   },
   form: {
     display: 'flex',
-    flexDirection: 'column', // No need for 'as' assertion
+    flexDirection: 'column', // Properly typed as 'column'
     alignItems: 'center',
   },
   input: {
