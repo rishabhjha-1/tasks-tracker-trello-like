@@ -3,7 +3,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { DndProvider, useDrag, useDrop, DropTargetMonitor } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import axios from 'axios';
-import { useRouter } from 'next/navigation';  // Import useRouter from Next.js
+import { useRouter } from 'next/navigation';
 
 interface Developer {
   _id: string;
@@ -37,7 +37,7 @@ const TaskCard: React.FC<{
   moveTask: (fromStatus: string, toStatus: string, dragIndex: number, hoverIndex: number) => void 
 }> = ({ task, index, status, moveTask }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [{ isDragging }, drag] = useDrag<DragItem, unknown, { isDragging: boolean }>({
+  const [{ isDragging }, drag] = useDrag<DragItem, unknown, { isDragging: boolean }>( {
     type: 'TASK',
     item: { id: task._id, index, status, type: 'TASK' },
     collect: (monitor) => ({
@@ -53,7 +53,7 @@ const TaskCard: React.FC<{
       }
       const dragIndex = item.index;
       const hoverIndex = index;
-      
+
       if (dragIndex === hoverIndex && item.status === status) {
         return;
       }
@@ -88,7 +88,9 @@ const TaskCard: React.FC<{
         backgroundColor: '#456C86',
         color: 'white',
         borderRadius: '4px',
-        cursor: 'move'
+        cursor: 'move',
+        maxWidth: '100%', // Ensure the task card doesn't exceed its parent's width
+        boxSizing: 'border-box', // Include padding and border in the element's total width and height
       }}
     >
       <div>{task.title}</div>
@@ -123,11 +125,13 @@ const Column: React.FC<{
     <div 
       ref={ref} 
       style={{ 
-        minWidth: '250px',
+        flex: '1 1 250px', // Flexible width for responsiveness
         backgroundColor: '#f4f5f7',
         borderRadius: '4px',
         padding: '8px',
-        marginRight: '16px'
+        marginRight: '16px',
+        minWidth: '200px', // Minimum width for smaller screens
+        boxSizing: 'border-box', // Include padding and border in the element's total width and height
       }}
     >
       <h3 style={{ marginBottom: '8px' }}>{column.title}</h3>
@@ -154,25 +158,25 @@ const Board: React.FC = () => {
   const [, setDevelopers] = useState<Developer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const router = useRouter(); // Initialize useRouter
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-          const [tasksRes, devsRes] = await Promise.all([
-            axios.get<Task[]>('/api/tasks'),
-            axios.get<Developer[]>('/api/developer')
-          ]);
+        const [tasksRes, devsRes] = await Promise.all([
+          axios.get<Task[]>('/api/tasks'),
+          axios.get<Developer[]>('/api/developer')
+        ]);
 
-          setDevelopers(devsRes.data);
+        setDevelopers(devsRes.data);
 
-          const newColumns = columns.map(column => ({
-            ...column,
-            tasks: tasksRes.data.filter(task => task.status === column.id)
-          }));
+        const newColumns = columns.map(column => ({
+          ...column,
+          tasks: tasksRes.data.filter(task => task.status === column.id)
+        }));
 
-          setColumns(newColumns);
+        setColumns(newColumns);
 
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -189,12 +193,11 @@ const Board: React.FC = () => {
     const fromColumn = newColumns.find((col: Column) => col.id === fromStatus);
     const toColumn = newColumns.find((col: Column) => col.id === toStatus);
     const [removedTask] = fromColumn.tasks.splice(dragIndex, 1);
-    
+
     removedTask.status = toStatus;
     toColumn.tasks.splice(hoverIndex, 0, removedTask);
 
     setColumns(newColumns);
-
 
     try {
       await axios.patch(`/api/tasks/${removedTask._id}`, { status: toStatus });
@@ -226,7 +229,7 @@ const Board: React.FC = () => {
             Add Developer
           </button>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', padding: '20px' }}>
           {columns.map(column => (
             <Column key={column.id} column={column} moveTask={moveTask} />
           ))}
