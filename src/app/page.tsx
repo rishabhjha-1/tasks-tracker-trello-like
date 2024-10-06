@@ -4,6 +4,7 @@ import { DndProvider, useDrag, useDrop, DropTargetMonitor } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { TouchBackend } from 'react-dnd-touch-backend';
 
 interface Developer {
   _id: string;
@@ -44,7 +45,6 @@ const TaskCard: React.FC<{
       isDragging: monitor.isDragging(),
     }),
   });
-
   const [, drop] = useDrop<DragItem, unknown, unknown>({
     accept: 'TASK',
     hover(item: DragItem, monitor: DropTargetMonitor) {
@@ -210,9 +210,10 @@ const Board: React.FC = () => {
   if (isLoading) {
     return <div>Loading...</div>;
   }
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
   return (
-    <DndProvider backend={HTML5Backend}>
+    <DndProvider backend={isMobile ? TouchBackend : HTML5Backend}>
       <div style={{ padding: '20px', textAlign: 'center' }}>
         <h1>Task Tracker</h1>
         <div style={{ marginBottom: '20px' }}>
