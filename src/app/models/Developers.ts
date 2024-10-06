@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, models } from 'mongoose';
+import  { Schema, model, models } from 'mongoose';
 import { DeveloperDocument } from '@/app/types';
 
 const developerSchema = new Schema<DeveloperDocument>({
